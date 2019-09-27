@@ -1,0 +1,40 @@
+{{define "content"}}
+
+<head>
+    <title>Cloud Run Chat</title>
+    <style type="text/css">
+        p {
+            color: blue;
+            line-height: 1.5;
+        }
+
+        iframe {
+            width: 100%;
+            height: calc(100% - 150px);
+        }
+        form {
+            font-size: 2em;
+        }
+        input {
+            height: 120px;
+            width:20%;
+            font-size: 1em;
+        }
+   </style>
+</head>
+
+<body>
+    <iframe src="./chatlog" name="sample">
+        この部分はインラインフレームを使用しています。
+    </iframe>
+
+    <form action="./" method="POST">
+        <label for="name">名前: </label>
+        <input type="text" id="name" name="name" value="{{.Name}}" placeholder="名前を入力" />
+        <label for="message"> : </label>
+        <input type="text" id="message" name="message" value="" placeholder="コメントをどうぞ" />
+        <input type="submit" />
+    </form>
+</body>
+
+{{end}}
