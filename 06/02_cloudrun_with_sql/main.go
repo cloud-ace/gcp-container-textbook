@@ -7,10 +7,17 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/kelseyhightower/envconfig"
+
 	"github.com/0Delta/CloudRunSample/handler"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
+
+// Env 環境変数から読み込む値リスト
+type Env struct {
+	Port string `required:"true" split_words:"true"`
+}
 
 var templates map[string]*template.Template
 
@@ -40,6 +47,12 @@ func init() {
 func main() {
 	e := echo.New()
 
+	var goenv Env
+	if err := envconfig.Process("", &goenv); err != nil {
+		e.Logger.Fatal("Failed to Loading env.", err)
+		return
+	}
+
 	t := &Template{}
 	e.Renderer = t
 
@@ -56,7 +69,7 @@ func main() {
 	e.POST("/", PostFnc)
 	e.GET("/chatlog", GetLog)
 
-	e.Logger.Fatal(e.Start(":8080"))
+	e.Logger.Fatal(e.Start(":" + goenv.Port))
 }
 
 // GetLog ログ画面を表示する

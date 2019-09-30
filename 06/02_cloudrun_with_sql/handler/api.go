@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/kelseyhightower/envconfig"
 	"github.com/labstack/echo/v4"
 
 	cloudsqlproxy "github.com/GoogleCloudPlatform/cloudsql-proxy/proxy/dialers/mysql"
@@ -40,15 +41,25 @@ func AddRecords(c echo.Context) error {
 	return err
 }
 
+// Env 環境変数から読み込む値
+type Env struct {
+	DatabaseAddress string `required:"true" split_words:"true"`
+}
+
 func connDatabase() (*sql.DB, error) {
+	var goenv Env
+	if err := envconfig.Process("", &goenv); err != nil {
+		return nil, err
+	}
+
 	db, err := cloudsqlproxy.DialCfg(&mysql.Config{
-		Addr:                 "ca-seno-test:asia-northeast1:sql4cloudrun", // インスタンス接続名
-		DBName:               "mydb",                                      // データベース名
-		User:                 "user",                                      // ユーザ名
-		Passwd:               "user_password",                             // ユーザパスワード
-		Net:                  "cloudsql",                                  // Cloud SQL Proxy で接続する場合は cloudsql 固定です
-		ParseTime:            true,                                        // DATE/DATETIME 型を time.Time へパースする
-		TLSConfig:            "",                                          // TLSConfig は空文字を設定しなければなりません
+		Addr:                 goenv.DatabaseAddress, // インスタンス接続名
+		DBName:               "mydb",                // データベース名
+		User:                 "user",                // ユーザ名
+		Passwd:               "user_password",       // ユーザパスワード
+		Net:                  "cloudsql",            // Cloud SQL Proxy で接続する場合は cloudsql 固定です
+		ParseTime:            true,                  // DATE/DATETIME 型を time.Time へパースする
+		TLSConfig:            "",                    // TLSConfig は空文字を設定しなければなりません
 		AllowNativePasswords: true,
 	})
 	if err != nil {
