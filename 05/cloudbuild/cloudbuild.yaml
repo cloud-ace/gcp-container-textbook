@@ -1,0 +1,35 @@
+steps:
+
+- id: "build image"
+  name: "gcr.io/cloud-builders/docker"
+  args: ["build", "-t", "gcr.io/$PROJECT_ID/pubsub-publisher", "."]
+
+- id: "push image to GCR"
+  name: "gcr.io/cloud-builders/docker"
+  args: ["push", "gcr.io/$PROJECT_ID/pubsub-publisher"]
+
+- id: "replace PROJECT_ID in manifest"
+  name: "alpine"
+  entrypoint: "ash"
+  args:
+    - "-c"
+    - |
+      sed -i -e "s/YOUR_PROJECT_ID/$PROJECT_ID/g" kubernetes/pubsub-publisher.yaml
+
+- id: "replace PUBSUB_TOPIC"
+  name: "alpine"
+  entrypoint: "ash"
+  args:
+    - "-c"
+    - |
+      sed -i -e "s/PUBSUB_TOPIC_NAME/${_PUBSUB_TOPIC_NAME}/g" kubernetes/pubsub-publisher.yaml
+
+- id: "deploy"
+  name: "gcr.io/cloud-builders/kubectl"
+  args: ["apply", "-f", "kubernetes/pubsub-publisher.yaml"]
+  env:
+    - "CLOUDSDK_COMPUTE_ZONE=asia-northeast1-a"
+    - "CLOUDSDK_CONTAINER_CLUSTER=gke-cluster"
+
+substitutions:
+  _PUBSUB_TOPIC_NAME: sample-topic

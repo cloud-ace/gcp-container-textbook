@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pubsub-publisher
+  labels:
+    app: web
+spec:
+  volumes:
+    - name: credential
+      secret:
+        secretName: pubsub-credential
+  containers:
+    - name: pubsub-publisher
+      image: gcr.io/YOUR_PROJECT_ID/pubsub-publisher # Fixme
+      env:
+        - name: PROJECT_ID
+          value: YOUR_PROJECT_ID # Fixme
+        - name: PUBSUB_TOPIC
+          value: sample-topic
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /home/root/credential.json
+      ports:
+        - containerPort: 80
+      volumeMounts:
+        - mountPath: /home/root
+          name: credential
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pubsub-publisher
+spec:
+  type: LoadBalancer
+  selector:
+    app: web
+  ports:
+    - port: 80
+      targetPort: 80

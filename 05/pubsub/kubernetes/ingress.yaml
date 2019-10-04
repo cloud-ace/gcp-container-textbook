@@ -1,0 +1,14 @@
+kind: Ingress
+apiVersion: extensions/v1beta1
+metadata:
+  name: ingress-lb
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "ingress-ip"
+spec:
+  rules:
+    - host: foo.bar.com
+      http:
+        paths:
+          - backend:
+              serviceName: nginx
+              servicePort: 8080

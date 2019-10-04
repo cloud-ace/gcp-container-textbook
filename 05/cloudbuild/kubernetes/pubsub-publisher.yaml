@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pubsub-publisher
+spec:
+  selector:
+    matchLabels:
+      app: pubsub-publisher
+  template:
+    metadata:
+      labels:
+        app: pubsub-publisher
+    spec:
+      containers:
+      - name: pubsub-publisher
+        image: gcr.io/YOUR_PROJECT_ID/pubsub-publisher
+        resources:
+          requests:
+            memory: 1Gi
+            cpu: 500m
+          limits:
+            memory: 2Gi
+            cpu: 1000m
+        ports:
+        - containerPort: 80
+        env:
+          - name: PROJECT_ID
+            value: YOUR_PROJECT_ID
+          - name: PUBSUB_TOPIC
+            value: PUBSUB_TOPIC_NAME
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pubsub-publisher
+spec:
+  type: NodePort
+  selector:
+    app: pubsub-publisher
+  ports:
+  - port: 80
+    targetPort: 80
+---

@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: web-volume
+  labels:
+    role: pd
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 10Gi
+  gcePersistentDisk:
+    pdName: web-volume
+    fsType: "ext4"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: static-volume-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  selector:
+    matchLabels:
+      role: pd
+  storageClassName: ""
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-with-static-volume
+spec:
+  volumes:
+    - name: web-volume
+      persistentVolumeClaim:
+        claimName: static-volume-claim
+  containers:
+    - name: nginx
+      image: nginx:stable-alpine
+      volumeMounts:
+        - mountPath: /var/www/html
+          name: web-volume
