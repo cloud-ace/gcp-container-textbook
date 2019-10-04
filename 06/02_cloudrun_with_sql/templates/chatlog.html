@@ -1,0 +1,15 @@
+{{define "content"}}
+
+<body>
+    <meta http-equiv="refresh" content="5">
+    <ul>
+        {{range .Data}}
+        <li>
+          <b>{{.name}}</b><br />
+          {{.message}}
+        </li>
+        {{end}}
+    </ul>
+</body>
+
+{{end}}
