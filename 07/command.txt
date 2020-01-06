@@ -1,0 +1,238 @@
+## 7章
+
+#
+minikube start --vm-driver=virtualbox --memory=3072 --kubernetes-version=v1.14.2
+
+#
+curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.4.2 sh -
+
+#
+cd istio-1.4.2
+
+#
+export PATH=$PWD/bin:$PATH
+
+#
+istioctl version
+
+#
+istioctl verify-install
+
+#
+istioctl manifest apply --set profile=demo
+
+#
+kubectl get crds
+
+#
+kubectl get pods -n istio-system
+
+#
+kubectl label namespace default istio-injection=enabled
+
+#
+kubectl get namespaces -l istio-injection=enabled
+
+#
+kubectl apply -f samples/bookinfo/platform/kube/bookinfo.yaml
+
+#
+kubectl get pods
+
+#
+kubectl get svc
+
+#
+istioctl proxy-status
+
+#
+kubectl exec -it $(kubectl get pod -l app=ratings -o jsonpath='{.items[0].metadata.name}') -c ratings -- curl productpage:9080/productpage | grep -o "<title>.*</title>"
+
+#
+kubectl get deployments istio-egressgateway istio-ingressgateway -n istio-system
+
+#
+kubectl get services istio-egressgateway istio-ingressgateway -n istio-system
+
+#
+kubectl apply -f samples/bookinfo/networking/bookinfo-gateway.yaml
+
+#
+kubectl get gateways
+
+#
+kubectl get virtualservices
+
+#
+export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')
+
+#
+export INGRESS_HOST=$(minikube ip)
+
+#
+export GATEWAY_URL=$INGRESS_HOST:$INGRESS_PORT
+
+#
+curl -s http://${GATEWAY_URL}/productpage | grep -o "<title>.*</title>"
+
+#
+echo http://$GATEWAY_URL/productpage
+
+#
+kubectl apply -f samples/bookinfo/networking/destination-rule-all.yaml
+
+#
+kubectl apply -f samples/bookinfo/networking/virtual-service-all-v1.yaml
+
+#
+kubectl apply -f samples/bookinfo/networking/virtual-service-reviews-50-v3.yaml
+
+#
+kubectl apply -f samples/bookinfo/networking/virtual-service-reviews-v3.yaml
+
+#
+kubectl delete -f samples/bookinfo/networking/virtual-service-all-v1.yaml
+
+#
+kubectl apply -f samples/bookinfo/networking/virtual-service-all-v1.yaml
+
+#
+kubectl apply -f - <<EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: reviews
+spec:
+  hosts:
+    - reviews
+  http:
+  - route:
+    - destination:
+        host: reviews
+        subset: v2
+EOF
+
+#
+kubectl apply -f - <<EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: ratings
+spec:
+  hosts:
+  - ratings
+  http:
+  - fault:
+      delay:
+        percent: 100
+        fixedDelay: 2s
+    route:
+    - destination:
+        host: ratings
+        subset: v1
+EOF
+
+#
+kubectl apply -f - <<EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: reviews
+spec:
+  hosts:
+  - reviews
+  http:
+  - route:
+    - destination:
+        host: reviews
+        subset: v2
+    timeout: 0.5s
+EOF
+
+#
+kubectl delete -f samples/bookinfo/networking/virtual-service-all-v1.yaml
+
+#
+kubectl apply -f samples/bookinfo/networking/virtual-service-all-v1.yaml
+
+#
+kubectl apply -f samples/bookinfo/networking/virtual-service-reviews-test-v2.yaml
+
+#
+kubectl apply -f samples/bookinfo/networking/virtual-service-ratings-test-delay.yaml
+
+#
+kubectl delete -f samples/bookinfo/networking/virtual-service-all-v1.yaml
+
+#
+kubectl -n istio-system get svc kiali
+
+#
+for ((i=0; i<100; i++)); do curl http://$GATEWAY_URL/productpage >& /dev/null ; done
+
+#
+istioctl dashboard kiali
+
+#
+kubectl delete -f samples/bookinfo/platform/kube/bookinfo.yaml
+
+#
+kubectl delete -f samples/bookinfo/networking/destination-rule-all-mtls.yaml
+
+#
+kubectl apply -f samples/httpbin/httpbin.yaml
+
+#
+kubectl apply -f - <<EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: httpbin
+spec:
+  host: httpbin
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 1
+      http:
+        http1MaxPendingRequests: 1
+        maxRequestsPerConnection: 1
+    outlierDetection:
+      consecutiveErrors: 1
+      interval: 1s
+      baseEjectionTime: 3m
+      maxEjectionPercent: 100
+EOF
+
+#
+kubectl apply -f samples/httpbin/sample-client/fortio-deploy.yaml
+
+#
+kubectl get pods
+
+#
+FORTIO_POD=$(kubectl get pod | grep fortio | awk '{ print $1 }')
+
+#
+kubectl exec -it $FORTIO_POD  -c fortio /usr/bin/fortio -- load -curl  http://httpbin:8000/get
+
+#
+kubectl exec -it $FORTIO_POD  -c fortio /usr/bin/fortio -- load -c 2 -qps 0 -n 20 -loglevel Warning http://httpbin:8000/get
+
+#
+kubectl exec -it $FORTIO_POD  -c fortio /usr/bin/fortio -- load -c 3 -qps 0 -n 30 -loglevel Warning http://httpbin:8000/get
+
+#
+kubectl delete destinationrule httpbin
+
+#
+kubectl delete deploy httpbin fortio-deploy
+
+#
+kubectl delete svc httpbin
+
+#
+minikube stop
+
+#
+minikube delete

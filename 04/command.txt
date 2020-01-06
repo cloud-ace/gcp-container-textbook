@@ -1,0 +1,191 @@
+## 4章
+
+#
+gcloud components install kubectl
+
+#
+brew install minikube
+
+#
+minikube start --vm-driver=virtualbox
+
+#
+kubectl version
+
+#
+kubectl get nodes
+
+#
+minikube dashboard
+
+#
+kubectl api-resources
+
+#
+kubectl explain nodes
+
+#
+kubectl create ns demo
+
+#
+kubectl get ns
+
+#
+kubectl delete ns demo
+
+#
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 80
+EOF
+
+#
+kubectl get pods -o wide
+
+#
+kubectl describe pods nginx
+
+#
+kubectl exec -it nginx /bin/bash
+
+#
+kubectl
+
+#
+kubectl expose pods nginx
+
+#
+kubectl get service nginx -o yaml
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2019-09-27T02:40:59Z"
+  labels:
+    name: nginx
+  name: nginx
+  namespace: default
+  resourceVersion: "7919"
+  selfLink: /api/v1/namespaces/default/services/nginx
+  uid: 3ce59d48-e0d0-11e9-ad76-02dd279d2a53
+spec:
+  clusterIP: 10.102.57.137
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    name: nginx
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
+
+#
+kubectl delete service nginx
+
+#
+kubectl get service nginx
+
+#
+minikube ip
+
+#
+kubectl delete service nginx
+
+#
+minikube addons enable ingress
+
+#
+minikube addons list | grep ingress:
+
+#
+kubectl expose pods nginx
+
+#
+kubectl apply -f - <<EOF
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /nginx
+        backend:
+          serviceName: nginx
+          servicePort: 80
+EOF
+
+#
+kubectl get ingress
+
+#
+kubectl delete pods nginx
+
+#
+kubectl delete service nginx
+
+#
+kubectl delete ingress nginx
+
+#
+kubectl apply -f - <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    @<tt>{spec}:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+EOF
+
+#
+kubectl get deployments
+
+#
+kubectl get replicasets
+
+#
+kubectl get pods
+
+#
+kubectl delete pod nginx-xxxxx
+
+#
+kubectl get pods
+
+#
+kubectl delete deployment nginx
+
+#
+minikube stop
+
+#
+minikube delete
