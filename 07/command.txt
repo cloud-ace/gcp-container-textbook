@@ -195,7 +195,7 @@ spec:
       tcp:
         maxConnections: 1
       http:
-        http1MaxPendingRequests: 1
+        http1MaxPendingRequests: 2
         maxRequestsPerConnection: 1
     outlierDetection:
       consecutiveErrors: 1
