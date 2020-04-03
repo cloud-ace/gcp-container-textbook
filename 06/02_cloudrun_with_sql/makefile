@@ -21,6 +21,3 @@ deploy:
 	make upload
 	gcloud beta run deploy ${PACKAGE_NAME} --image $(CONTAINER_PATH) --platform managed --region asia-northeast1
 
-#drydeploy:
-#	cloud-build-local --substitutions=_PACKAGE_NAME=s-ex-delay,_CONTAINER_PATH=gcr.io/ca-seno-test/s-ex-deray --config=cloudbuild.yml --dryrun=true .
-
